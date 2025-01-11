@@ -12,7 +12,8 @@ for example the user can choose the process id and area number for OSPF and the 
 The backup script loop across all devices giving you the option to backup the device or not.
 the OSPF troubleshooting script looks for inconsistancies withen: hello timer,dead timer and network type and check for duplicate router-id, then print a report of collected values that include warnings for error in the mentioned values.
 
-![tr2](https://github.com/user-attachments/assets/b40f35cc-80a1-4483-813f-d8801609d0e8)
+
+![ospftroubleshoot](https://github.com/user-attachments/assets/31de81d6-1533-4aa7-9028-18815cdcc996)
 
 
 if you have any notes or improvments please let me know.
