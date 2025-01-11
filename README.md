@@ -13,7 +13,8 @@ The backup script loop across all devices giving you the option to backup the de
 the OSPF troubleshooting script looks for inconsistancies withen: hello timer,dead timer and network type and check for duplicate router-id, then print a report of collected values that include warnings for error in the mentioned values.
 
 
-![ospftroubleshoot](https://github.com/user-attachments/assets/31de81d6-1533-4aa7-9028-18815cdcc996)
+![ospftroubleshooting](https://github.com/user-attachments/assets/8b952091-5f41-4112-933d-3368e4723257)
+
 
 
 if you have any notes or improvments please let me know.
