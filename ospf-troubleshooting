@@ -60,7 +60,7 @@ for device in devices_list:
     hello_timer = output[output.find('Hello') + 6:output.find('Hello') + 8].strip()
     dead_timer = output[output.find('Dead') + 5:output.find('Dead') + 7].strip()
     network_type = output[output.find('Network Type') + 13:output.find(', Cost: 1')].strip()
-    router_id = output[output.find('Router ID') + 10:output.find('Router ID') + 17].strip()
+    router_id=output[output.find('Router ID')+10:output.find(', Network')].strip()
 
     temp = {
         'hello timer': hello_timer,
@@ -70,7 +70,7 @@ for device in devices_list:
     }
     all_devices_info[ip_addr] = temp
 
-
+# Check for mismatches and duplicates
 warnings['hello timer'] = duplicate('hello timer', all_devices_info)
 warnings['Dead timer'] = duplicate('Dead timer', all_devices_info)
 warnings['network type'] = duplicate('network type', all_devices_info)
@@ -78,7 +78,7 @@ router_id_duplicates = replicate('router id', all_devices_info)
 if router_id_duplicates:
     warnings['router id'] = router_id_duplicates
 
-
+# Write the results to the report file
 with open('ospf_report.txt', 'a') as f:
     f.write("All Devices Info:\n")
     f.write(json.dumps(all_devices_info, indent=4))
