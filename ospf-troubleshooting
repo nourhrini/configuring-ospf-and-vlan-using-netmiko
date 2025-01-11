@@ -1,0 +1,86 @@
+import json
+from getpass import getpass
+from netmiko import ConnectHandler
+from netmiko.ssh_exception import NetMikoTimeoutException
+from paramiko.ssh_exception import SSHException
+from netmiko.ssh_exception import AuthenticationException
+
+def duplicate(a, data):
+    mismatches = []
+    prev_value = None
+    prev_key = None
+    for key, value in data.items():
+        current = value[a]
+        if prev_value is not None and current != prev_value:
+            mismatches.append(f"Mismatch between {prev_key} and {key}: {prev_value} vs {current}")
+        prev_value = current
+        prev_key = key
+    return mismatches
+
+def replicate(a, data):
+    value_ids = {}
+    for key, value in data.items():
+        value_id = value[a]
+        value_ids.setdefault(value_id, []).append(key)
+
+    duplicates = {value_id: keys for value_id, keys in value_ids.items() if len(keys) > 1}
+    return duplicates
+
+username = input('Enter your SSH username: ')
+password = getpass()
+all_devices_info = {}
+warnings = {}
+
+with open('devices_file') as f:
+    devices_list = f.read().splitlines()
+
+for device in devices_list:
+    print(f"Connecting to: {device}")
+    ip_addr = device
+    cisco_sw = {
+        'device_type': 'cisco_ios',
+        'host': ip_addr,
+        'username': username,
+        'password': password,
+    }
+    try:
+        net_connect = ConnectHandler(**cisco_sw)
+    except (AuthenticationException, NetMikoTimeoutException, SSHException, Exception) as error:
+        print(f"Failed to connect to {device}: {error}")
+        continue
+
+    output = net_connect.send_command('show ip ospf')
+    if len(output) < 1:
+        print('Error found')
+        with open('ospf_report.txt', 'a') as f:
+            f.write(f"Device {ip_addr} does not have OSPF configured\n")
+        continue
+
+    output = net_connect.send_command('show ip ospf int')
+    hello_timer = output[output.find('Hello') + 6:output.find('Hello') + 8].strip()
+    dead_timer = output[output.find('Dead') + 5:output.find('Dead') + 7].strip()
+    network_type = output[output.find('Network Type') + 13:output.find(', Cost: 1')].strip()
+    router_id = output[output.find('Router ID') + 10:output.find('Router ID') + 17].strip()
+
+    temp = {
+        'hello timer': hello_timer,
+        'Dead timer': dead_timer,
+        'network type': network_type,
+        'router id': router_id,
+    }
+    all_devices_info[ip_addr] = temp
+
+
+warnings['hello timer'] = duplicate('hello timer', all_devices_info)
+warnings['Dead timer'] = duplicate('Dead timer', all_devices_info)
+warnings['network type'] = duplicate('network type', all_devices_info)
+router_id_duplicates = replicate('router id', all_devices_info)
+if router_id_duplicates:
+    warnings['router id'] = router_id_duplicates
+
+
+with open('ospf_report.txt', 'a') as f:
+    f.write("All Devices Info:\n")
+    f.write(json.dumps(all_devices_info, indent=4))
+    f.write("\n\nWarnings:\n")
+    f.write(json.dumps(warnings, indent=4))
